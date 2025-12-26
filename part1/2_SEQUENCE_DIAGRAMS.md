@@ -142,10 +142,15 @@ sequenceDiagram
     DB-->>Logic: Return matching places
 	deactivate DB
     loop For each place
-        Logic->>DB: SELECT * FROM reviews WHERE place_id = place.id
-	activate DB
-        Logic->>DB: SELECT * FROM amenities WHERE place_id = place.id
-	deactivate DB
+    Logic->>DB: SELECT * FROM reviews WHERE place_id = place.id
+    activate DB
+    DB-->>Logic: reviews
+    deactivate DB
+
+    Logic->>DB: SELECT * FROM amenities WHERE place_id = place.id
+    activate DB
+    DB-->>Logic: amenities
+    deactivate DB
     end
     Logic-->>API: Return list of place objects with reviews and amenities
 	deactivate Logic
