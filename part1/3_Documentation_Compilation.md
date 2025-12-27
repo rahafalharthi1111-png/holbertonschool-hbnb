@@ -31,7 +31,22 @@ Class Diagram
 Explanatory Notes:
 This diagram details the entities in the business logic layer, their attributes, methods, and relationships. Focused on core entities: User, Place, Review, Amenity.
 Diagram (Mermaid):
-%%{init: {'theme': 'dark'}}%%
+
+```mermaid
+%%{init: {
+  'theme': 'dark',
+  'themeVariables': {
+    'darkMode': true,
+    'primaryColor': '#161b22',
+    'primaryTextColor': '#c9d1d9',
+    'primaryBorderColor': '#30363d',
+    'lineColor': '#58a6ff',
+    'secondaryColor': '#0d1117',
+    'tertiaryColor': '#21262d',
+    'mainBkg': '#0d1117'
+  }
+}}%%
+
 classDiagram
     class BaseModel {
         <<abstract>>
@@ -87,20 +102,26 @@ classDiagram
         +get_amenities() List~Amenity~
     }
 
+    %% Inheritance Relationships
     BaseModel <|-- User
     BaseModel <|-- Place
     BaseModel <|-- Review
     BaseModel <|-- Amenity
 
+    %% Associations and Multiplicities
     User "1" -- "0..*" Place : owns
     User "1" -- "0..*" Review : writes
     Place "1" -- "0..*" Review : has
     Place "0..*" *-- "0..*" Amenity : features
 
-    note for User "email and password are private with validation\npassword is write-only and hashed" 
+
+    %% Notes Attachments
+    note for User "email and password are private with validation
+    password is write-only and hashed" 
     note for Place "price, latitude, longitude are validated in setters"
     note for Review "rating must be 1-5"
     note for Amenity "many-to-many relationship with Place"
+
 Design Decisions:
 BaseModel provides common fields and methods to all entities.
 Relationships enforce ownership (User owns Place), reviews (Place has Reviews), and amenities.
@@ -112,6 +133,7 @@ Sequence Diagrams for Key API Calls
 Explanatory Notes:
 These diagrams show step-by-step how the system handles API requests, including interactions between Client, API Layer, Business Logic Layer, and Persistence Layer.
 4.1 User Registration
+```mermaid
 sequenceDiagram
     autonumber
     participant Client as User (Frontend)
@@ -119,24 +141,31 @@ sequenceDiagram
     participant Logic as Business Logic Layer
     participant DB as Persistence Layer (Database)
 
-    Note over Client: User fills out registration form
+    Note over Client: The user fills out the registration form
     Client->>API: POST /api/users {first_name, last_name, email, password}
 	activate API
-    Note over API: Validate input data
+
+    Note over API: Validate input data (presence, format, email uniqueness)
     API->>Logic: register_user(data: dict)
 	activate Logic
+
     Note over Logic: Hash password, generate UUID, timestamps
-    Logic->>DB: INSERT INTO users (...)
+    Logic->>DB: INSERT INTO users (uuid, first_name, last_name, email, hashed_password, is_admin, created_at, updated_at)
 	activate DB
-    DB-->>Logic: Return new user ID
+
+    DB-->>Logic: Return new user ID and confirmation
 	deactivate DB
-    Logic-->>API: Return user object (no password)
+    Logic-->>API: Return user object (without password)
 	deactivate Logic
-    API-->>Client: 201 Created + JSON {id, first_name, last_name, email, is_admin}
+    API-->>Client: 201 Created + JSON {id, first_name, last_name, email, is_admin, created_at}
 deactivate API
+```
+
 Description:
 Validates user input, hashes password, stores in DB, and returns safe response.
 4.2 Place Creation
+
+```mermaid
 sequenceDiagram
     autonumber
     participant Client as User (Frontend)
@@ -144,21 +173,35 @@ sequenceDiagram
     participant Logic as Business Logic Layer
     participant DB as Persistence Layer (Database)
 
+    Note over Client: User submits a new place listing form
     Client->>API: POST /api/places {title, description, price, lat, long}
 	activate API
+
+    Note right of API: Validates input data (types, required fields)
     API->>Logic: create_place(data)
 	activate Logic
-    Logic->>DB: INSERT INTO places (...)
+
+    Note right of Logic: Validate data, associate current user as owner<br>Generate UUID, set created_at/updated_at<br>Sanitize fields if necessary
+    Logic->>DB: INSERT INTO places (id, user_id, title, description, price, latitude, longitude, created_at, updated_at)
 	activate DB
+
+    Note right of DB: Save the new place entry<br>Return newly created place ID
     DB-->>Logic: Return place_id
 	deactivate DB
-    Logic-->>API: Return created place object
+    Logic-->>API: Return created place object (JSON, no internal fields)
 	deactivate Logic
     API-->>Client: 201 Created + JSON {id, title, description, price, lat, long}
 deactivate API
+
+    Note right of Client: Displays success message and new place
+
+```
+
 Description:
 Adds new place, links to owner, and persists data.
 4.3 Review Submission
+
+```mermaid
 sequenceDiagram
     autonumber
     participant Client as User (Frontend)
@@ -167,45 +210,63 @@ sequenceDiagram
     participant DB as Persistence Layer (Database)
 
     Client->>API: POST /api/reviews {place_id, rating, comment}
+    Note right of Client: Authenticated user
 	activate API
-    API->>Logic: create_review(data, user_id)
+
+    API->>Logic: create_review(data: dict, user_id: str)
+    Note right of API: Extract user ID from auth token
 	activate Logic
-    Logic->>DB: INSERT INTO reviews (...)
+
+    Logic->>DB: INSERT INTO reviews (user_id, place_id, rating, comment, created_at, updated_at)
+    Note right of Logic: Business logic validates data and creates review
 	activate DB
-    DB-->>Logic: Return review ID
+
+    DB-->>Logic: Return review ID and confirmation
 	deactivate DB
-    Logic-->>API: Return review object
+    Logic-->>API: Return review object as dict
 	deactivate Logic
     API-->>Client: 201 Created + JSON {id, user_id, place_id, rating, comment, created_at, updated_at}
-deactivate API
+	deactivate API
+
+```
+
 Description:
 Submits review, ensures authentication, validates data, saves to DB.
 4.4 Fetching a List of Places
+
+```mermaid
 sequenceDiagram
     autonumber
     participant Client as User (Frontend)
     participant API as API (Presentation Layer)
     participant Logic as Business Logic Layer
     participant DB as Persistence Layer (Database)
-
     Client->>API: GET /api/places?min_price=50&max_price=200&lat=45.5&long=3.2
 	activate API
     API->>Logic: fetch_places(filters: dict)
 	activate Logic
-    Logic->>DB: SELECT * FROM places WHERE ...
+    Logic->>DB: SELECT * FROM places WHERE price BETWEEN 50 AND 200 AND location NEAR (lat, long)
 	activate DB
     DB-->>Logic: Return matching places
 	deactivate DB
     loop For each place
-        Logic->>DB: SELECT * FROM reviews WHERE place_id = place.id
-        DB-->>Logic: reviews
-        Logic->>DB: SELECT * FROM amenities WHERE place_id = place.id
-        DB-->>Logic: amenities
+    Logic->>DB: SELECT * FROM reviews WHERE place_id = place.id
+    activate DB
+    DB-->>Logic: reviews
+    deactivate DB
+
+    Logic->>DB: SELECT * FROM amenities WHERE place_id = place.id
+    activate DB
+    DB-->>Logic: amenities
+    deactivate DB
     end
     Logic-->>API: Return list of place objects with reviews and amenities
 	deactivate Logic
-    API-->>Client: 200 OK + JSON [...]
+    API-->>Client: 200 OK + JSON [\n  {id, title, price, lat, long, reviews[], amenities[]},\n  {...}\n]
 deactivate API
+    
+```
+
 Description:
 Retrieves places based on filters, enriches with reviews and amenities.
 5. Review & Recommendations
