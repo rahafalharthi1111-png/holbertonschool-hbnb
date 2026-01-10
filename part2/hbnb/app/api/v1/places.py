@@ -16,6 +16,13 @@ user_model = api.model("PlaceUser", {
     "email": fields.String
 })
 
+review_model = api.model('PlaceReview', {
+    'id': fields.String(description='Review ID'),
+    'text': fields.String(description='Text of the review'),
+    'rating': fields.Integer(description='Rating of the place (1-5)'),
+    'user_id': fields.String(description='ID of the user')
+})
+
 place_model = api.model("Place", {
     "title": fields.String(required=True),
     "description": fields.String,
@@ -23,7 +30,8 @@ place_model = api.model("Place", {
     "latitude": fields.Float(required=True),
     "longitude": fields.Float(required=True),
     "owner_id": fields.String(required=True),
-    "amenities": fields.List(fields.String)
+    "amenities": fields.List(fields.String),
+    "reviews": fields.List(fields.Nested(review_model), description="List of reviews")
 })
 
 
@@ -74,3 +82,15 @@ class PlaceResource(Resource):
         if not place:
             return {"error": "Place not found or invalid data"}, 404
         return {"message": "Place updated successfully"}, 200
+
+
+
+@api.route('/<place_id>/reviews')
+class PlaceReviewList(Resource):
+    @api.response(200, 'List of reviews for the place retrieved successfully')
+    @api.response(404, 'Place not found')
+    def get(self, place_id):
+        reviews = facade.get_reviews_by_place(place_id)
+        if reviews is None:
+            return {"error": "Place not found"}, 404
+        return [r.to_dict() for r in reviews], 200
