@@ -116,4 +116,3 @@ class Place(BaseModel):
             ],
             "reviews": self.reviews  # list of review IDs
         }
-

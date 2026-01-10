@@ -45,7 +45,11 @@ class HBnBFacade:
             return None
 
         return [self.get_review(rid) for rid in place.reviews]
+<<<<<<< HEAD
         def create_place(self, place_data):
+=======
+def create_place(self, place_data):
+>>>>>>> 63a1ef0 (task4)
     # Placeholder for logic to create a place, including validation for price, latitude, and longitude
     pass
 
