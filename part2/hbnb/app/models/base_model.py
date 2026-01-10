@@ -16,3 +16,10 @@ class BaseModel:
                 setattr(self, key, value)
         self.save()
 
+
+    def to_dict(self):
+        """Return a dictionary representation of the model"""
+        result = self.__dict__.copy()
+        result["created_at"] = self.created_at.isoformat()
+        result["updated_at"] = self.updated_at.isoformat()
+        return result
