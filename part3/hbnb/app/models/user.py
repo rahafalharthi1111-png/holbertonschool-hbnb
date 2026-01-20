@@ -1,41 +1,26 @@
+from app import db, bcrypt
 from app.models.base_model import BaseModel
-import re
+
 
 class User(BaseModel):
-    def __init__(self, first_name, last_name, email, password, is_admin=False):
-        super().__init__()
-        self.first_name = first_name[:50]
-        self.last_name = last_name[:50]
-        self.email = email
-        self.is_admin = is_admin
+    __tablename__ = "users"
 
-        self.password = None
-        self.hash_password(password)
+    first_name = db.Column(db.String(50), nullable=False)
+    last_name = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(128), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
 
-
-        self.validate()
-
-    def validate(self):
-        if not self.first_name or not self.last_name:
-            raise ValueError("First name and last name are required")
-        
-        if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", self.email):
-            raise ValueError("Invalid email format")
-    
-
-    def hash_password(self, password):
+    def set_password(self, password):
         if not password:
             raise ValueError("Password is required")
-        
-        from app import bcrypt
-        self.password = bcrypt.generate_password_hash(password).decode("utf-8")
 
-    def verify_password(self, password):
-        from app import bcrypt
-        return bcrypt.check_password_hash(self.password, password)
-    
+        self.password_hash = bcrypt.generate_password_hash(
+            password
+        ).decode("utf-8")
 
-    def to_dict(self):
-        data = super().to_dict()
-        data.pop("password", None)
-        return data
+    def check_password(self, password):
+        return bcrypt.check_password_hash(
+            self.password_hash,
+            password
+        )
