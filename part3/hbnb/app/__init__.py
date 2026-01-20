@@ -7,7 +7,7 @@ from config import DevelopmentConfig
 
 from app.services.facade import HBnBFacade
 from app.models.user import User
-
+from app import db
 
 
 bcrypt = Bcrypt()
@@ -21,6 +21,7 @@ def create_app(config_class=DevelopmentConfig):
 
     bcrypt.init_app(app)
     jwt.init_app(app)
+    db.init_app(app)
 
     api = Api(app, version='1.0', title='HBnB API', description='HBnB Application API', doc='/api/v1/')
     from app.api.v1.users import api as users_ns
