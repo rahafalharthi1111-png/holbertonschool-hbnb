@@ -24,16 +24,57 @@ review_model = api.model('PlaceReview', {
 })
 
 place_model = api.model("Place", {
-    "title": fields.String(required=True),
-    "description": fields.String,
-    "price": fields.Float(required=True),
-    "latitude": fields.Float(required=True),
-    "longitude": fields.Float(required=True),
-    "owner_id": fields.String(required=True),
-    "amenities": fields.List(fields.String),
-    "reviews": fields.List(fields.Nested(review_model), description="List of reviews")
+    "title": fields.String(
+        required=True,
+        min_length=1,
+        max_length=100,
+        description="Title of the place (1-100 chars)"
+    ),
+    "description": fields.String(
+        required=False,
+        max_length=500,
+        description="Description of the place (max 500 chars)"
+    ),
+    "price": fields.Float(
+        required=True,
+        description="Price of the place (must be positive)"
+    ),
+    "latitude": fields.Float(
+        required=True,
+        description="Latitude of the place (-90 to 90)"
+    ),
+    "longitude": fields.Float(
+        required=True,
+        description="Longitude of the place (-180 to 180)"
+    ),
+    "owner_id": fields.String(
+        required=True,
+        description="ID of the user who owns this place"
+    ),
+    "amenities": fields.List(
+        fields.String,
+        required=False,
+        description="List of amenity IDs associated with this place"
+    )
 })
 
+place_update_model = api.model("PlaceUpdate", {
+    "title": fields.String(
+        required=False, 
+        min_length=1, 
+        max_length=100
+        ),
+    "description": fields.String(
+        required=False, 
+        max_length=500
+        ),
+    "price": fields.Float(
+        required=False
+        ),
+    "latitude": fields.Float(required=False ),
+    "longitude": fields.Float(required=False),
+    "amenities": fields.List(fields.String, required=False)
+})
 
 @api.route("/")
 class PlaceList(Resource):
@@ -67,21 +108,22 @@ class PlaceResource(Resource):
         owner = facade.get_user(place.owner_id)
         amenities = [facade.get_amenity(a) for a in place.amenities]
 
-        result = place.to_dict()
-        result["owner"] = owner.to_dict() if owner else None
-        result["amenities"] = [a.to_dict() for a in amenities if a]
+        result = place.to_dict(detailed=True)
 
         return result, 200
 
-    @api.expect(place_model)
+    @api.expect(place_update_model)
     @api.response(200, "Place updated successfully")
+    @api.response(400, "Invalid input data")
     @api.response(404, "Place not found")
     def put(self, place_id):
         data = request.get_json()
-        place = facade.update_place(place_id, data)
-        if not place:
-            return {"error": "Place not found or invalid data"}, 404
-        return {"message": "Place updated successfully"}, 200
+        
+        place, error = facade.update_place(place_id, data)
+        if error:
+            return {"error": "Place not found or invalid data"}, 400
+        
+        return {"message": "Place was successfully updated"}, 200
 
 
 
