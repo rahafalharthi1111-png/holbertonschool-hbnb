@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from app import db
 
 class Repository(ABC):
     @abstractmethod
@@ -51,7 +52,7 @@ class InMemoryRepository(Repository):
     def get_by_attribute(self, attr_name, attr_value):
         return next((obj for obj in self._storage.values() if getattr(obj, attr_name) == attr_value), None)
 
-    class SQLAlchemyRepository(Repository):
+class SQLAlchemyRepository(Repository):
 
     def __init__(self, model):
         self.model = model
@@ -69,17 +70,23 @@ class InMemoryRepository(Repository):
 
     def update(self, obj_id, data):
         obj = self.get(obj_id)
-        if obj:
-            for key, value in data.items():
-                setattr(obj, key, value)
-            db.session.commit()
+        if not obj:
+            return None
+
+        for key, value in data.items():
+            setattr(obj, key, value)
+
+        db.session.commit()
         return obj
 
     def delete(self, obj_id):
         obj = self.get(obj_id)
-        if obj:
-            db.session.delete(obj)
-            db.session.commit()
+        if not obj:
+            return False
+
+        db.session.delete(obj)
+        db.session.commit()
+        return True
 
     def get_by_attribute(self, attr_name, attr_value):
         return self.model.query.filter(
