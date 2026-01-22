@@ -14,7 +14,7 @@ class HBnBFacade:
         self.place_repo = InMemoryRepository()
         self.review_repo = InMemoryRepository()
 
-    #Users CRUD
+        #Users CRUD
     def create_user(self, user_data):
         user = User(**user_data)
         self.user_repo.add(user)
@@ -34,9 +34,13 @@ class HBnBFacade:
         if not user:
             return None
         
-        for key, value in data.items():
-            setattr(user, key, value)
-        self.user_repo.update(user.id, data)
+        user.user_update(data)
+
+        self.user_repo.update(user.id, {
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'email': user.email
+    })
         return user
     
     
@@ -122,35 +126,47 @@ class HBnBFacade:
     def update_place(self, place_id, place_data):
         place = self.place_repo.get(place_id)
         if not place:
-            return None
-
+            return None, "Place Not found"
+        if "owner_id" in place_data:
+            return None, "Owner cannot be updated"
         try:
             place.update(place_data)
-            self.place_repo.update(place.id, place_data)
-            return place
-        except Exception:
-            return None
+            self.place_repo.update(place.id, {
+                "title": place.title,
+                "description": place.description,
+                "price": place.price,
+                "latitude": place.latitude,
+                "longitude": place.longitude,
+            })
+            return place, None
+        except ValueError as e:
+            return None, str(e)
 
 
 
     ## Reviwes CRUD
+    def create_review(self, review_data, current_user_id):
 
-    def create_review(self, review_data):
-        user_id = review_data.get("user_id")
-        place_id = review_data.get("place_id")
-        text = review_data.get("text")
-        rating = review_data.get("rating")
-
-        if not user_id or not place_id or not text or rating is None:
-            raise ValueError("All fields (user_id, place_id, text, rating) are required.")
-
-        user = self.user_repo.get(user_id)
+        user = self.user_repo.get(current_user_id)
         if not user:
             raise ValueError("User not found.")
-
+        
+        place_id = review_data.get("place_id")
         place = self.place_repo.get(place_id)
         if not place:
             raise ValueError("Place not found.")
+        
+        if place.owner.id == current_user_id:
+            raise ValueError("Cannot review your own place")
+        
+        for review in place.reviews:
+            if review.user.id == current_user_id:
+                raise ValueError("You have already reviwed this place")
+
+        text = review_data.get("text")
+        rating = review_data.get("rating")
+        if not text or rating is None:
+            raise ValueError("All fields are required.")
 
         if not (1 <= rating <= 5):
             raise ValueError("Rating must be between 1 and 5.")
@@ -173,13 +189,17 @@ class HBnBFacade:
             return None
         return place.reviews
 
-    def update_review(self, review_id, review_data):
+    def update_review(self, review_id, review_data, current_user_id):
         review = self.get_review(review_id)
         if not review:
-            return None
+            return None, "Reviwe not found."
+        
+        if review.user.id != current_user_id:
+            return None, "Unauthorized action."
 
         if "text" in review_data:
             review.text = review_data["text"]
+
         if "rating" in review_data:
             rating = review_data["rating"]
             if not (1 <= rating <= 5):
@@ -187,14 +207,136 @@ class HBnBFacade:
             review.rating = rating
 
         self.review_repo.update(review.id, review_data)
-        return review
+        return review, None
 
-    def delete_review(self, review_id):
+    def delete_review(self, review_id, current_user_id):
         review = self.get_review(review_id)
         if not review:
-            return False
+            return False, "Review not found."
 
+        if review.user.id != current_user_id:
+            return False, "Unauthorized action."
+        
         self.review_repo.delete(review.id)
+
         if review in review.place.reviews:
             review.place.reviews.remove(review)
-        return True
+        return True, None
+
+    #admin CRUD
+    def admin_update_user(self, user_id, email=None, password=None):
+        user = self.get_user(user_id)
+        if not user:
+            return False, "User not found"
+        
+        if email:
+            user.email = email
+        if password:
+            user.set_password(password)
+        
+        self.user_repo.save(user)
+        return True, None
+    
+    def admin_create_user(self, user_data):
+        email = user_data.get("email")
+        password = user_data.get("password")
+        first_name = user_data.get("first_name", "")
+        last_name = user_data.get("last_name", "")
+        is_admin = user_data.get("is_admin", False)
+
+        if not email or not password:
+            raise ValueError("Email and password are required.")
+
+        if self.get_user_by_email(email):
+            raise ValueError("Email already registered")
+
+
+        user = User(
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            is_admin=is_admin
+        )
+
+        self.user_repo.add(user)
+        return user
+
+    
+    def admin_update_user(self, user_id, update_data):
+        user = self.get_user(user_id)
+        if not user:
+            return None, "User not found."
+        
+
+        if "email" in update_data and update_data['email']:
+            email = update_data['email']
+            existing_user = self.get_user_by_email(email)
+            if existing_user and existing_user.id != user_id:
+                return None, "Email already in use."
+        
+        try:
+            user.user_update(update_data)
+            if 'password' in update_data and update_data['password']:
+                user.hash_password(update_data['password'])
+        except ValueError as e:
+            return None, str(e)
+
+        self.user_repo.update(user.id,{
+            "email": user.email,
+            "password": user.password,
+            "first_name": user.first_name,
+            "last_name": user.last_name
+        })
+
+        return user, None
+    
+    
+    def admin_create_amenity(self, data):
+        name = data.get("name")
+        if not name or not name.strip():
+            return None, "Amenity name is required."
+
+        existing = self.amenity_repo.get_by_attribute("name", name.strip())
+        if existing:
+            return None, "Amenity already exists."
+
+        amenity = Amenity(name=name.strip())
+        self.amenity_repo.add(amenity)
+        return amenity, None
+    
+    
+    def admin_update_amenity(self, amenity_id, amenity_data):
+        amenity = self.amenity_repo.get(amenity_id)
+        if not amenity:
+            return None, "Amenity not found"
+
+        if 'name' in amenity_data and amenity_data['name'].strip():
+            amenity.name = amenity_data['name'].strip()
+        else:
+            return None, "Amenity name is required"
+
+        self.amenity_repo.update(amenity.id, {"name": amenity.name})
+        return amenity, None
+
+
+    def admin_update_place(self, place_id, place_data, bypass_owner=False):
+        place = self.place_repo.get(place_id)
+        if not place:
+            return None, "Place not found"
+
+        if not bypass_owner and "owner_id" in place_data:
+            return None, "Owner cannot be updated"
+
+        try:
+            place.update(place_data)
+            self.place_repo.update(place.id, {
+                "title": place.title,
+                "description": place.description,
+                "price": place.price,
+                "latitude": place.latitude,
+                "longitude": place.longitude
+            })
+            return place, None
+        except ValueError as e:
+            return None, str(e)
