@@ -61,8 +61,8 @@ class Place(BaseModel):
 
 
 
-    def to_dict(self):
-        return {
+    def to_dict(self, detailed=False):
+        data = {
             "id": self.id,
             "title": self.title,
             "description": self.description,
@@ -73,3 +73,31 @@ class Place(BaseModel):
             "reviews": [review.to_dict() for review in self.reviews],
             "amenities": [amenity.id for amenity in self.amenities]
         }
+        if detailed:
+            data["owner"] = self.owner.to_dict() if self.owner else None
+            data["amenities"] = [amenity.to_dict() for amenity in self.amenities] 
+        return data
+    
+    def update(self, data):
+        if 'title' in data:
+            if not data['title'] or len(data['title']) > 100:
+                raise ValueError("Title is required and max 100 chars.")
+            self.title = data['title']
+
+        if 'price' in data:
+            if data['price'] <= 0:
+                raise ValueError("Price must be positive")
+            self.price = data['price']
+
+        if 'latitude' in data:
+            if data['latitude'] < -90 or data['latitude'] > 90:
+                raise ValueError("Latitude must be between -90 and 90")
+            self.latitude = data['latitude']
+
+        if 'longitude' in data:
+            if data['longitude'] < -180 or data['longitude'] > 180:
+                raise ValueError("Lonitude must be between -180 and 180")
+            self.longitude = data['longitude']
+        
+        if 'description' in data:
+            self.description = data['description']
