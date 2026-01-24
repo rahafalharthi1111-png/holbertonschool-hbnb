@@ -1,6 +1,7 @@
 from flask_restx import Api
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
+from flask_sqlalchemy import SQLAlchemy 
 
 authorizations = {
     'BearerAuth': {
@@ -19,5 +20,6 @@ rest_api = Api(version='1.0',
         security='BearerAuth'
         )
 
+db = SQLAlchemy()
 bcrypt = Bcrypt()
 jwt = JWTManager()
