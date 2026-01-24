@@ -1,9 +1,11 @@
 from flask_restx import Namespace, Resource, fields
-from app.services import facade
+from app.services.facade import HBnBFacade
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.extensions import authorizations
 
 ns = Namespace('users', description='User operations')
+
+facade = HBnBFacade()
 
 # Define the user model for input validation and documentation
 user_create_model = ns.model('UserCreate', {
