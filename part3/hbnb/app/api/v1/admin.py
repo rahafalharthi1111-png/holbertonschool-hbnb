@@ -2,10 +2,11 @@ from flask import request
 from flask_restx import Namespace, Resource, fields
 from flask_jwt_extended import jwt_required, get_jwt
 
-from app.services import facade
+from app.services.facade import HBnBFacade
 
 ns = Namespace('admin', description='Admin operations')
 
+facade = HBnBFacade()
 
 admin_user_model = ns.model("AdminUserCreate", {
     "email": fields.String(required=True, description="User email, must be unique"),

@@ -1,9 +1,11 @@
 from flask_restx import Namespace, Resource, fields
 from flask import request
-from app.services import facade
+from app.services.facade import HBnBFacade
 from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
 
 ns = Namespace("places", description="Place operations")
+
+facade = HBnBFacade()
 
 amenity_model = ns.model("PlaceAmenity", {
     "id": fields.String,

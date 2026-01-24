@@ -1,11 +1,12 @@
 from flask_restx import Namespace, Resource, fields
 from flask import request
-from app.services import facade
+from app.services.facade import HBnBFacade
 from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
 
 
 ns = Namespace('reviews', description='Review operations')
 
+facade = HBnBFacade()
 
 review_model = ns.model('Review', {
     'text': fields.String(required=True, description='Text of the review'),
