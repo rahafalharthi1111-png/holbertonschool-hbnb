@@ -6,17 +6,6 @@ from app.services import facade
 
 ns = Namespace('admin', description='Admin operations')
 
-admin_data = {
-    "email": "admin@example.com",
-    "password": "securepassword",
-    "first_name": "Admin",
-    "last_name": "User",
-    "is_admin": True
-}
-
-admin_user = facade.create_user(admin_data)
-print(admin_user.to_dict())
-
 
 admin_user_model = ns.model("AdminUserCreate", {
     "email": fields.String(required=True, description="User email, must be unique"),

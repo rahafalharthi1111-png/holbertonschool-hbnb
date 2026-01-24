@@ -1,7 +1,6 @@
 from flask import Flask
 import config
-from app.extensions import rest_api, bcrypt, jwt
-from app import db
+from app.extensions import rest_api, bcrypt, jwt, db
 
 
 
