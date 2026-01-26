@@ -1,8 +1,7 @@
+from app.extensions import db
 from app.models.base_model import BaseModel
 
-class Amenity(BaseModel):
-    def __init__(self, name=None, **kwargs):
-        super().__init__()
-        if not name or len(name) > 50:
-            raise ValueError("Amenity name is required and max 50 chars")
-        self.name = name
+class Amenity(BaseModel, db.Model):
+    __tablename__ = "amenities"
+
+    name = db.Column(db.String(128), nullable=False, unique=True)
