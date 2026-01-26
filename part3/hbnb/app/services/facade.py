@@ -1,5 +1,8 @@
 from app.persistence import SQLAlchemyRepository, UserRepository
 from app.models import User, Amenity, Place, Review
+from app.persistence.place_repository import PlaceRepository
+from app.persistence.review_repository import ReviewRepository
+from app.persistence.amenity_repository import AmenityRepository
 
 
 
