@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
-
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 from app.extensions import db
+
 
 class BaseModel(db.Model):
     __abstract__ = True
@@ -19,27 +20,39 @@ class BaseModel(db.Model):
 
     updated_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow
+        default=datetime.utcnow
     )
 
     def save(self):
-        """Update the updated_at timestamp whenever the object is modified"""
         self.updated_at = datetime.now()
 
     def update(self, data):
-        """Update the attributes of the object based on the provided dictionary"""
         for key, value in data.items():
-            if hasattr(self, key):
-                setattr(self, key, value)
+            if hasattr(self.__class__, key):
+                attr = getattr(self.__class__, key)
+                if isinstance(attr, InstrumentedAttribute):
+                    try:
+                        setattr(self, key, value)
+                    except Exception:
+                        continue
+                else:
+                    setattr(self, key, value)
+        self.updated_at = datetime.now()
         self.save()
 
-    def to_dict(self):
-        """Return a dictionary representation of the model"""
-        result = self.__dict__.copy()
 
-        result.pop("password", None)
-        
-        result["created_at"] = self.created_at.isoformat()
-        result["updated_at"] = self.updated_at.isoformat()
-        return result
+def to_dict(self):
+    dict_representation = {
+        column.key: getattr(self, column.key)
+        for column in self.__mapper__.columns
+    }
+
+    if hasattr(self, "created_at"):
+        dict_representation["created_at"] = (
+            self.created_at.isoformat() if self.created_at else None
+        )
+    if hasattr(self, "updated_at"):
+        dict_representation["updated_at"] = (
+            self.updated_at.isoformat() if self.updated_at else None
+        )
+    return dict_representation
