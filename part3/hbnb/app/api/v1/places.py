@@ -57,7 +57,8 @@ place_model = ns.model("Place", {
     "amenities": fields.List(
         fields.String,
         required=False,
-        description="List of amenity IDs associated with this place"
+        description="List of amenity IDs associated with this place",
+        attribute='user_id'
     )
 })
 
@@ -78,11 +79,28 @@ place_update_model = ns.model("PlaceUpdate", {
     "longitude": fields.Float(required=False),
     "owner_id": fields.String(
         required=True,
-        description="ID of the user who owns this place"
+        description="ID of the user who owns this place",
+        
     ),
     "amenities": fields.List(fields.String, required=False)
 })
 
+
+place_resp_model = ns.model("PlaceResponse", {
+    "id": fields.String,
+    "title": fields.String,
+    "description": fields.String,
+    "price": fields.Float,
+    "latitude": fields.Float,
+    "longitude": fields.Float,
+
+    "owner_id": fields.String(attribute="user_id"),
+
+    "amenities": fields.List(
+        fields.String,
+        attribute=lambda place: [amenity.id for amenity in place.amenities]
+    )
+})
 @ns.route("/")
 class PlaceList(Resource):
     @jwt_required()
@@ -100,7 +118,7 @@ class PlaceList(Resource):
     @ns.response(200, "List of places retrieved successfully")
     def get(self):
         places = facade.get_all_places()
-        return [p.to_dict() for p in places], 200
+        return ns.marshal(places, place_resp_model), 200
 
 
 @ns.route("/<place_id>")
@@ -113,36 +131,40 @@ class PlaceResource(Resource):
         if not place:
             return {"error": "Place not found"}, 404
 
-        owner = facade.get_user(place.owner_id)
-        amenities = [facade.get_amenity(a) for a in place.amenities]
+        owner_id = facade.get_user(place.user_id)
+        amenities = place.amenities
 
-        result = place.to_dict(detailed=True)
+        
 
-        return result, 200
+        return ns.marshal(place, place_resp_model), 200
     
     
     @jwt_required()
     @ns.expect(place_update_model)
     @ns.response(200, "Place updated successfully")
     @ns.response(400, "Invalid input data")
-    @ns.response(400, "Place not found")
-    @ns.response(403, 'Unauthorized action')
+    @ns.response(403, "Unauthorized action")
+    @ns.response(404, "Place not found")
     def put(self, place_id):
         current_user = get_jwt_identity()
+
         place = facade.get_place(place_id)
+        if not place:
+            return {"error": "Place not found"}, 404
 
         if place.owner is None or place.owner.id != current_user:
-            return{'error': 'Unauthorized action'}, 403
-        
+            return {"error": "Unauthorized action"}, 403
+
         data = request.get_json() or {}
-        if 'owner_id' in data:
-            return {'error': 'Cannot update owner_id'}, 400
-        
-        update_place, error = facade.update_place(place_id, data)
+        if "owner_id" in data:
+            return {"error": "Cannot update owner_id"}, 400
+
+        updated_place, error = facade.update_place(place_id, data)
         if error:
             return {"error": "Place not found or invalid data"}, 400
-        
+
         return {"message": "Place was successfully updated"}, 200
+
 
 
 
@@ -154,4 +176,4 @@ class PlaceReviewList(Resource):
         reviews = facade.get_reviews_by_place(place_id)
         if reviews is None:
             return {"error": "Place not found"}, 404
-        return [r.to_dict() for r in reviews], 200
+        return ns.marshal(reviews, review_model), 200
