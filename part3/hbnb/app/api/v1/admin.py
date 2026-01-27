@@ -7,7 +7,6 @@ from app.services.facade import HBnBFacade
 ns = Namespace('admin', description='Admin operations')
 
 facade = HBnBFacade()
-
 admin_user_model = ns.model("AdminUserCreate", {
     "email": fields.String(required=True, description="User email, must be unique"),
     "password": fields.String(required=True, description="User password"),
@@ -32,6 +31,7 @@ user_update_model = ns.model("AdminUserUpdate", {
 })
 
 amenity_model = ns.model("AmenityCreate", {
+    'id': fields.String,
     "name": fields.String(required=True, description="Name of the amenity")
 })
 
@@ -83,6 +83,7 @@ class AdminUserResource(Resource):
 class AdminUserCreate(Resource):
     @jwt_required()
     @ns.expect(admin_user_model)
+    @ns.response(201, "User successfuly created")
     @ns.response(400, "Email already registered or invalid input")
     @ns.response(403, "Admin privileges required")
     def post(self):
@@ -93,7 +94,7 @@ class AdminUserCreate(Resource):
         user_data = request.get_json()
         try:
             user = facade.admin_create_user(user_data)
-            return user.to_dict(), 201
+            return ns.marshal(user, admin_resp_user_model), 201
         except ValueError as e:
             return {'error': str(e)}, 400
     
@@ -146,13 +147,16 @@ class AdminAmenityCreate(Resource):
         if error:
             return {"error": error}, 400
 
-        return {"message": "Amenity created successfully", "amenity": amenity.to_dict()}, 201
+        return {"message": "Amenity created successfully", "amenity": ns.marshal(amenity, amenity_model)}, 201
 
 
 @ns.route('/amenities/<amenity_id>')
 class AdminAmenityModify(Resource):
     @jwt_required()
     @ns.expect(amenity_model)
+    @ns.response(200, "Amenity successfuly updated.")
+    @ns.response(403, "Admin privileges required.")
+    @ns.response(404, "Amenity not found.")
     def put(self, amenity_id):
         current_user = get_jwt()
         
@@ -170,7 +174,7 @@ class AdminAmenityModify(Resource):
                 return {"error": error}, 404
             return {"error": error}, 400
 
-        return amenity.to_dict(), 200
+        return {"message": "Amenity updated successfully", "amenity": ns.marshal(amenity, amenity_model)}, 200
     
 @ns.route('/places/<place_id>')
 class AdminPlaceModify(Resource):
