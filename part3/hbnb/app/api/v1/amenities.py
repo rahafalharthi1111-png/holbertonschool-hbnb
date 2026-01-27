@@ -5,10 +5,15 @@ ns = Namespace('amenities', description='Amenity operations')
 
 facade = HBnBFacade()
 
+
 amenity_model = ns.model('Amenity', {
     'name': fields.String(required=True, description='Name of the amenity')
 })
 
+amenity_resp_model = ns.model("AmenityResponse",{
+    'id': fields.String,
+    'name': fields.String,
+})
 
 
 @ns.route('/')
@@ -25,13 +30,14 @@ class AmenityList(Resource):
         if not amenity:
             return {"error": "Invalid input data"}, 400
 
-        return amenity.to_dict(), 201
+        
+        return ns.marshal(amenity, amenity_resp_model), 201
 
     @ns.response(200, 'List of amenities retrieved successfully')
     def get(self):
         """Retrieve all amenities"""
         amenities = facade.get_all_amenities()
-        return [a.to_dict() for a in amenities], 200
+        return ns.marshal(amenities, amenity_resp_model), 200
     
 
 
@@ -47,7 +53,7 @@ class AmenityResource(Resource):
         if not amenity:
             return {"error": "Amenity not found"}, 404
 
-        return amenity.to_dict(), 200
+        return ns.marshal(amenity, amenity_resp_model), 200
 
     @ns.expect(amenity_model)
     @ns.response(200, 'Amenity updated successfully')
