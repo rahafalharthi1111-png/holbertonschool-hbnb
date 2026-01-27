@@ -1,22 +1,18 @@
-from app.persistence import SQLAlchemyRepository, UserRepository
+from uuid import UUID
+
+from app.persistence import (SQLAlchemyRepository, UserRepository,
+PlaceRepository, ReviewRepository, AmenityRepository)
 from app.models import User, Amenity, Place, Review
-from app.persistence.place_repository import PlaceRepository
-from app.persistence.review_repository import ReviewRepository
-from app.persistence.amenity_repository import AmenityRepository
-from app.models.user import User
-from app.models.place import Place
-from app.models.review import Review
-from app.models.amenity import Amenity
 
 
 class HBnBFacade:
     def __init__(self):
         self.user_repo = UserRepository()
-        self.amenity_repo = SQLAlchemyRepository(Amenity)
-        self.place_repo = SQLAlchemyRepository(Place)
-        self.review_repo = SQLAlchemyRepository(Review)
+        self.amenity_repo = AmenityRepository()
+        self.place_repo = PlaceRepository()
+        self.review_repo = ReviewRepository()
 
-        #Users CRUD
+    #Users CRUD
     def create_user(self, user_data):
         user = User(**user_data)
         self.user_repo.add(user)
@@ -67,17 +63,7 @@ class HBnBFacade:
     
 
     def update_amenity(self, amenity_id, amenity_data):
-        amenity = self.amenity_repo.get(amenity_id)
-
-        if not amenity:
-            return None
-
-        name = amenity_data.get("name")
-        if not name:
-            return False
-
-        amenity.name = name
-        return amenity
+        return self.amenity_repo.update(amenity_id, amenity_data)
 
 
 
@@ -90,12 +76,12 @@ class HBnBFacade:
             return None
 
 
-        amenities_ids = []
+        amenities_objs = []
         for amenity_id in place_data.get("amenities", []):
             amenity = self.amenity_repo.get(amenity_id)
             if not amenity:
                 return None
-            amenities_ids.append(amenity.id)
+            amenities_objs.append(amenity)
 
         try:
             place = Place(
@@ -104,11 +90,9 @@ class HBnBFacade:
                 price=place_data["price"],
                 latitude=place_data["latitude"],
                 longitude=place_data["longitude"],
-                owner=owner
+                user_id=owner.id
             )
-
-            for amenity in amenities_ids:
-                place.add_amenity(amenity)
+            place.amenities = amenities_objs
 
         except Exception as e:
             print("Place creation error:", e)
@@ -116,7 +100,8 @@ class HBnBFacade:
 
         self.place_repo.add(place)
         return place
-        
+
+
     def get_place(self, place_id):
         return self.place_repo.get(place_id)
 
@@ -129,8 +114,10 @@ class HBnBFacade:
         place = self.place_repo.get(place_id)
         if not place:
             return None, "Place Not found"
+
         if "owner_id" in place_data:
             return None, "Owner cannot be updated"
+
         try:
             place.update(place_data)
             self.place_repo.update(place.id, {
@@ -138,7 +125,7 @@ class HBnBFacade:
                 "description": place.description,
                 "price": place.price,
                 "latitude": place.latitude,
-                "longitude": place.longitude,
+                "longitude": place.longitude
             })
             return place, None
         except ValueError as e:
@@ -162,7 +149,7 @@ class HBnBFacade:
             raise ValueError("Cannot review your own place")
         
         for review in place.reviews:
-            if review.user.id == current_user_id:
+            if review.user_id == current_user_id:
                 raise ValueError("You have already reviwed this place")
 
         text = review_data.get("text")
@@ -173,7 +160,7 @@ class HBnBFacade:
         if not (1 <= rating <= 5):
             raise ValueError("Rating must be between 1 and 5.")
 
-        review = Review(text=text, rating=rating, user=user, place=place)
+        review = Review(text=text, rating=rating, user_id=user.id, place_id=place.id)
         self.review_repo.add(review)
         place.reviews.append(review)
 
@@ -196,7 +183,7 @@ class HBnBFacade:
         if not review:
             return None, "Reviwe not found."
         
-        if review.user.id != current_user_id:
+        if review.user_id != current_user_id:
             return None, "Unauthorized action."
 
         if "text" in review_data:
@@ -212,17 +199,19 @@ class HBnBFacade:
         return review, None
 
     def delete_review(self, review_id, current_user_id):
-        review = self.get_review(review_id)
+        review = self.review_repo.get(review_id)
         if not review:
             return False, "Review not found."
 
-        if review.user.id != current_user_id:
+        if review.user_id != current_user_id:
             return False, "Unauthorized action."
         
-        self.review_repo.delete(review.id)
+        place = review.place
+        if review in place.reviews:
+            place.reviews.remove(review)
 
-        if review in review.place.reviews:
-            review.place.reviews.remove(review)
+
+        self.review_repo.delete(review.id)
         return True, None
 
     #admin CRUD
