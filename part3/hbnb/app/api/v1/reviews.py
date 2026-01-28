@@ -9,6 +9,13 @@ ns = Namespace('reviews', description='Review operations')
 facade = HBnBFacade()
 
 review_model = ns.model('Review', {
+    'text': fields.String(required=True, description='Text of the review'),
+    'rating': fields.Integer(required=True, description='Rating of the place (1-5)'),
+    'user_id': fields.String(required=True, description='ID of the user'),
+    'place_id': fields.String(required=True, description='ID of the place')
+})
+
+review_resp_model = ns.model('ReviewResponsModel', {
     'id': fields.String(description='Review ID'),
     'text': fields.String(required=True, description='Text of the review'),
     'rating': fields.Integer(required=True, description='Rating of the place (1-5)'),
@@ -36,7 +43,7 @@ class ReviewList(Resource):
     def get(self):
         """Retrieve a list of all reviews"""
         reviews = facade.get_all_reviews()
-        return ns.marshal(reviews, review_model), 200
+        return ns.marshal(reviews, review_resp_model), 200
 
 @ns.route('/<review_id>')
 class ReviewResource(Resource):
@@ -46,7 +53,7 @@ class ReviewResource(Resource):
         review = facade.get_review(review_id)
         if not review:
             return {"error": "Review not found"}, 404
-        return ns.marshal(review, review_model), 200
+        return ns.marshal(review, review_resp_model), 200
 
     @jwt_required()
     @ns.expect(review_model)
