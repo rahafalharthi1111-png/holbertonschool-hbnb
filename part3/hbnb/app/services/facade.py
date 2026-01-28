@@ -118,19 +118,25 @@ class HBnBFacade:
         if "owner_id" in place_data:
             return None, "Owner cannot be updated"
 
-        try:
-            place.update(place_data)
-            self.place_repo.update(place.id, {
-                "title": place.title,
-                "description": place.description,
-                "price": place.price,
-                "latitude": place.latitude,
-                "longitude": place.longitude
-            })
-            return place, None
-        except ValueError as e:
-            return None, str(e)
+        for field in ["title", "description", "price", "latitude", "longitude"]:
+            if field in place_data:
+                setattr(place, field, place_data[field])
 
+
+        if "amenities" in place_data:
+            amenities_objs = []
+            for amenity_id in place_data["amenities"]:
+                amenity = self.amenity_repo.get(amenity_id)
+                if not amenity:
+                    return None, f"Amenity {amenity_id} not found"
+                amenities_objs.append(amenity)
+
+
+            place.amenities = amenities_objs
+
+        self.place_repo.commit()
+
+        return place, None
 
 
     ## Reviwes CRUD
@@ -319,15 +325,22 @@ class HBnBFacade:
         if not bypass_owner and "owner_id" in place_data:
             return None, "Owner cannot be updated"
 
-        try:
-            place.update(place_data)
-            self.place_repo.update(place.id, {
-                "title": place.title,
-                "description": place.description,
-                "price": place.price,
-                "latitude": place.latitude,
-                "longitude": place.longitude
-            })
-            return place, None
-        except ValueError as e:
-            return None, str(e)
+        for field in ["title", "description", "price", "latitude", "longitude"]:
+            if field in place_data:
+                setattr(place, field, place_data[field])
+
+
+        if "amenities" in place_data:
+            amenities_objs = []
+            for amenity_id in place_data["amenities"]:
+                amenity = self.amenity_repo.get(amenity_id)
+                if not amenity:
+                    return None, f"Amenity {amenity_id} not found"
+                amenities_objs.append(amenity)
+
+
+            place.amenities = amenities_objs
+
+        self.place_repo.commit()
+
+        return place, None

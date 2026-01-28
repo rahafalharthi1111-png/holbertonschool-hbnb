@@ -88,6 +88,9 @@ class SQLAlchemyRepository(Repository):
         if obj:
             db.session.delete(obj)
             db.session.commit()
-    
+
+    def commit(self):
+        db.session.commit()
+
     def get_by_attribute(self, att_name, att_value):
         return self.model.query.filter_by(**{att_name: att_value}).first()
