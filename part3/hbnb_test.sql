@@ -1,61 +1,98 @@
--- =====================================
--- HBnB Database Test Script (Tables already exist)
--- =====================================
+-- HBnB CRUD TEST SCRIPT
 
-USE hbnb_db;
+USE hbnb;
 
--- CREATE: إضافة مستخدم جديد
-INSERT INTO User (id, first_name, last_name, email, password)
-VALUES ('11111111-1111-1111-1111-111111111111', 'John', 'Doe', 'john@example.com', '$2b$12$examplehash');
+-- Verify tables exists 
+SHOW TABLES;
 
--- CREATE: إضافة مكان جديد
-INSERT INTO Place (id, title, description, price, latitude, longitude, owner_id)
-VALUES ('22222222-2222-2222-2222-222222222222', 'Cozy Villa', 'Nice view', 200.00, 36.5, -120.2, '11111111-1111-1111-1111-111111111111');
+DESCRIBE users;
+DESCRIBE places;
+DESCRIBE reviews;
+DESCRIBE amenities;
+DESCRIBE place_amenity;
 
--- CREATE: إضافة review
-INSERT INTO Review (id, text, rating, user_id, place_id)
-VALUES ('33333333-3333-3333-3333-333333333333', 'Amazing!', 5, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222');
 
--- CREATE: ربط place مع amenity
-INSERT INTO Place_Amenity (place_id, amenity_id)
-VALUES ('22222222-2222-2222-2222-222222222222', 'a8e9d9fa-1234-4b2f-9a5d-1f2c3d4e5b6f'); -- WiFi
+-- Verify admin user exists and is admin
+SELECT id, email, is_admin
+FROM users
+WHERE email = 'admin@hbnb.io';
 
--- READ: عرض كل المستخدمين
-SELECT * FROM User;
+-- Verify password is hashed (bcrypt hashes start with $2)
+SELECT password
+FROM users
+WHERE email = 'admin@hbnb.io';
 
--- READ: عرض كل الأماكن مع اسم المالك
-SELECT Place.id, Place.title, User.first_name, User.last_name
-FROM Place
-JOIN User ON Place.owner_id = User.id;
+-- Verify amenities exist
+SELECT * FROM amenities;
 
--- READ: عرض كل reviews مع معلومات المستخدم والمكان
-SELECT Review.text, Review.rating, User.first_name, Place.title
-FROM Review
-JOIN User ON Review.user_id = User.id
-JOIN Place ON Review.place_id = Place.id;
 
--- UPDATE: تعديل اسم المستخدم
-UPDATE User
-SET first_name = 'Jonathan'
-WHERE email = 'john@example.com';
+-- Insert a normal user
+INSERT INTO users VALUES (
+    UUID(),
+    'John',
+    'Doe',
+    'john.doe@email.com',
+    '$2b$12$examplehashedpasswordstring',
+    FALSE
+);
 
--- UPDATE: تعديل سعر المكان
-UPDATE Place
-SET price = 250.00
-WHERE title = 'Cozy Villa';
+-- Insert a place owned by admin
+INSERT INTO places VALUES (
+    UUID(),
+    'Beach House',
+    'Nice house near the beach',
+    250.00,
+    24.7136,
+    46.6753,
+    '36c9050e-ddd3-4c3b-9731-9f487208bbc1'
+);
 
--- DELETE: حذف review
-DELETE FROM Review
-WHERE id = '33333333-3333-3333-3333-333333333333';
+-- Insert a review
+INSERT INTO reviews VALUES (
+    UUID(),
+    'Amazing place!',
+    5,
+    (SELECT id FROM users WHERE email = 'john.doe@email.com'),
+    (SELECT id FROM places WHERE title = 'Beach House')
+);
 
--- DELETE: حذف المكان
-DELETE FROM Place
-WHERE id = '22222222-2222-2222-2222-222222222222';
+-- Link place with amenities
+INSERT INTO place_amenity VALUES (
+    (SELECT id FROM places WHERE title = 'Beach House'),
+    (SELECT id FROM amenities WHERE name = 'WiFi')
+);
 
--- DELETE: حذف المستخدم
-DELETE FROM User
-WHERE id = '11111111-1111-1111-1111-111111111111';
 
--- التحقق النهائي من Admin & Amenities
-SELECT first_name, last_name, email, is_admin FROM User WHERE is_admin = TRUE;
-SELECT * FROM Amenity;
+SELECT * FROM users;
+SELECT * FROM places;
+SELECT * FROM reviews;
+SELECT * FROM amenities;
+SELECT * FROM place_amenity;
+
+
+-- Update place price
+UPDATE places
+SET price = 300.00
+WHERE title = 'Beach House';
+
+-- Update review rating
+UPDATE reviews
+SET rating = 4
+WHERE text = 'Amazing place!';
+
+
+-- Delete review
+DELETE FROM reviews
+WHERE text = 'Amazing place!';
+
+-- Remove amenity from place
+DELETE FROM place_amenity
+WHERE place_id = (SELECT id FROM places WHERE title = 'Beach House');
+
+-- Delete place
+DELETE FROM places
+WHERE title = 'Beach House';
+
+-- Delete test user
+DELETE FROM users
+WHERE email = 'john.doe@email.com';
