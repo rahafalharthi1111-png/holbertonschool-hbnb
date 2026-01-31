@@ -1,59 +1,61 @@
 -- =====================================
--- HBnB Database Test Script
+-- HBnB Database Test Script (Tables already exist)
 -- =====================================
 
--- 1️⃣ إنشاء قاعدة البيانات والجداول
-CREATE DATABASE IF NOT EXISTS hbnb_db;
 USE hbnb_db;
 
--- جدول المستخدمين
-CREATE TABLE IF NOT EXISTS User (
-    id CHAR(36) PRIMARY KEY,
-    first_name VARCHAR(255) NOT NULL,
-    last_name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    is_admin BOOLEAN DEFAULT FALSE
-);
+-- CREATE: إضافة مستخدم جديد
+INSERT INTO User (id, first_name, last_name, email, password)
+VALUES ('11111111-1111-1111-1111-111111111111', 'John', 'Doe', 'john@example.com', '$2b$12$examplehash');
 
--- جدول الأماكن
-CREATE TABLE IF NOT EXISTS Place (
-    id CHAR(36) PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    price DECIMAL(10,2),
-    latitude FLOAT,
-    longitude FLOAT,
-    owner_id CHAR(36),
-    FOREIGN KEY (owner_id) REFERENCES User(id) ON DELETE CASCADE
-);
+-- CREATE: إضافة مكان جديد
+INSERT INTO Place (id, title, description, price, latitude, longitude, owner_id)
+VALUES ('22222222-2222-2222-2222-222222222222', 'Cozy Villa', 'Nice view', 200.00, 36.5, -120.2, '11111111-1111-1111-1111-111111111111');
 
--- جدول التقييمات
-CREATE TABLE IF NOT EXISTS Review (
-    id CHAR(36) PRIMARY KEY,
-    text TEXT,
-    rating INT CHECK (rating BETWEEN 1 AND 5),
-    user_id CHAR(36),
-    place_id CHAR(36),
-    FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE,
-    FOREIGN KEY (place_id) REFERENCES Place(id) ON DELETE CASCADE,
-    UNIQUE(user_id, place_id)
-);
+-- CREATE: إضافة review
+INSERT INTO Review (id, text, rating, user_id, place_id)
+VALUES ('33333333-3333-3333-3333-333333333333', 'Amazing!', 5, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222');
 
--- جدول amenities
-CREATE TABLE IF NOT EXISTS Amenity (
-    id CHAR(36) PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL
-);
+-- CREATE: ربط place مع amenity
+INSERT INTO Place_Amenity (place_id, amenity_id)
+VALUES ('22222222-2222-2222-2222-222222222222', 'a8e9d9fa-1234-4b2f-9a5d-1f2c3d4e5b6f'); -- WiFi
 
--- جدول الربط بين الأماكن وamenities (Many-to-Many)
-CREATE TABLE IF NOT EXISTS Place_Amenity (
-    place_id CHAR(36),
-    amenity_id CHAR(36),
-    PRIMARY KEY (place_id, amenity_id),
-    FOREIGN KEY (place_id) REFERENCES Place(id) ON DELETE CASCADE,
-    FOREIGN KEY (amenity_id) REFERENCES Amenity(id) ON DELETE CASCADE
-);
+-- READ: عرض كل المستخدمين
+SELECT * FROM User;
 
--- =====================================
--- 2️⃣ إدخال
+-- READ: عرض كل الأماكن مع اسم المالك
+SELECT Place.id, Place.title, User.first_name, User.last_name
+FROM Place
+JOIN User ON Place.owner_id = User.id;
+
+-- READ: عرض كل reviews مع معلومات المستخدم والمكان
+SELECT Review.text, Review.rating, User.first_name, Place.title
+FROM Review
+JOIN User ON Review.user_id = User.id
+JOIN Place ON Review.place_id = Place.id;
+
+-- UPDATE: تعديل اسم المستخدم
+UPDATE User
+SET first_name = 'Jonathan'
+WHERE email = 'john@example.com';
+
+-- UPDATE: تعديل سعر المكان
+UPDATE Place
+SET price = 250.00
+WHERE title = 'Cozy Villa';
+
+-- DELETE: حذف review
+DELETE FROM Review
+WHERE id = '33333333-3333-3333-3333-333333333333';
+
+-- DELETE: حذف المكان
+DELETE FROM Place
+WHERE id = '22222222-2222-2222-2222-222222222222';
+
+-- DELETE: حذف المستخدم
+DELETE FROM User
+WHERE id = '11111111-1111-1111-1111-111111111111';
+
+-- التحقق النهائي من Admin & Amenities
+SELECT first_name, last_name, email, is_admin FROM User WHERE is_admin = TRUE;
+SELECT * FROM Amenity;
