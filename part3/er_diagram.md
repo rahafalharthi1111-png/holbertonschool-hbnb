@@ -1,100 +1,134 @@
-HBnB Database ER Diagram
-Task 10: Generate Database Diagrams
-This document contains the Entity-Relationship (ER) diagram for the HBnB project database schema, created using Mermaid.js.
-ER Diagram
+# HBnB Database ER Diagram
+
+## Task 10: Generate Database Diagrams
+
+This document describes the **Entity-Relationship (ER) Diagram** for the **HBnB project database schema**, created using **Mermaid.js**.
+The diagram visually represents all core entities, their attributes, and the relationships between them.
+
+---
+
+## ER Diagram
 <img width="1121" height="849" alt="Screenshot (354)" src="https://github.com/user-attachments/assets/609ed81c-5b23-4541-b193-cc6e68602479" />
 
-Relationships Explanation
-USER → PLACE (One-to-Many) 
-A User can own many Places.
+---
 
-A Place belongs to one User (via owner_id foreign key).
+## Relationships Explanation
 
-Relationship notation: USER ||--o{ PLACE : "owns"
+### users → places (One-to-Many)
 
-USER → REVIEW (One-to-Many)
-A User can write many Reviews.
+- A **User** can own many **Places**.
+- A **Place** belongs to one **User**.
+- Implemented via the foreign key `owner_id` in the `places` table.
+- **Notation**:
+  `USER ||--o{ PLACE : "owns"`
 
-A Review is written by one User (via user_id foreign key).
+---
 
-Relationship notation: USER ||--o{ REVIEW : "writes"
+### users → reviews (One-to-Many)
 
-PLACE → REVIEW (One-to-Many)
-A Place can have many Reviews.
+- A **User** can write many **Reviews**.
+- A **Review** is written by one **User**.
+- Implemented via the foreign key `user_id` in the `reviews` table.
+- **Notation**:
+  `USER ||--o{ REVIEW : "writes"`
 
-A Review belongs to one Place (via place_id foreign key).
+---
 
-Relationship notation: PLACE ||--o{ REVIEW : "has"
+### places → reviews (One-to-Many)
 
-PLACE ↔ AMENITY (Many-to-Many)
-A Place can have many Amenities.
+- A **Place** can have many **Reviews**.
+- A **Review** belongs to one **Place**.
+- Implemented via the foreign key `place_id` in the `reviews` table.
+- **Notation**:
+  `PLACE ||--o{ REVIEW : "has"`
 
-An Amenity can be associated with many Places.
+---
 
-Implemented through the PLACE_AMENITY association table.
+### olaces ↔ amenityt (Many-to-Many)
 
-Relationship notation: PLACE }o--o{ AMENITY : "has"
+- A **Place** can have many **Amenities**.
+- An **Amenity** can be associated with many **Places**.
+- Implemented through the **PLACE_AMENITY** association table.
+- **Notation**:
+  `PLACE }o--o{ AMENITY : "has"`
 
-Entity Details
-USER
+---
 
-Primary Key: id (UUID, CHAR(36))
+## Entity Details
 
-Unique: email
+### users
 
-Attributes: first_name, last_name, email, password, is_admin, created_at, updated_at
+- **Primary Key**: `id` (UUID, `CHAR(36)`)
+- **Unique Constraint**: `email`
+- **Attributes**:
+  - `first_name`
+  - `last_name`
+  - `email`
+  - `password`
+  - `is_admin`
 
-PLACE
+---
 
-Primary Key: id (UUID)
+### places
 
-Foreign Key: owner_id → USER.id
+- **Primary Key**: `id` (UUID)
+- **Foreign Key**:
+  - `owner_id` → `USER.id`
+- **Attributes**:
+  - `title`
+  - `description`
+  - `price`
+  - `latitude`
+  - `longitude`
+  - `owner_id`
 
-Attributes: title, description, price, latitude, longitude, owner_id, created_at, updated_at
+---
 
-REVIEW
+### reviews
 
-Primary Key: id (UUID)
+- **Primary Key**: `id` (UUID)
+- **Foreign Keys**:
+  - `user_id` → `USER.id`
+  - `place_id` → `PLACE.id`
+- **Unique Constraint**:
+  - `(user_id, place_id)` ensures one review per user per place
+- **Attributes**:
+  - `text`
+  - `rating`
+  - `user_id`
+  - `place_id`
 
-Foreign Keys:
+---
 
-user_id → USER.id
+### amenity
 
-place_id → PLACE.id
+- **Primary Key**: `id` (UUID)
+- **Unique Constraint**: `name`
+- **Attributes**:
+  - `id`
+  - `name`
 
-Unique Constraint: (user_id, place_id) ensures one review per user per place
+---
 
-Attributes: text, rating, user_id, place_id, created_at, updated_at
+### places_amenity
 
-AMENITY
+- **Composite Primary Key**:
+  - `(place_id, amenity_id)`
+- **Foreign Keys**:
+  - `place_id` → `PLACE.id`
+  - `amenity_id` → `AMENITY.id`
+- **Purpose**:
+  - Association table representing the many-to-many relationship between **Place** and **Amenity**
 
-Primary Key: id (UUID)
+---
 
-Unique: name
+## Notes
 
-Attributes: name, created_at, updated_at
-
-PLACE_AMENITY
-
-Composite Primary Key: (place_id, amenity_id)
-
-Foreign Keys:
-
-place_id → PLACE.id
-
-amenity_id → AMENITY.id
-
-Purpose: Association table for the many-to-many relationship between Place and Amenity
-
-Notes
-
-All entities inherit id, created_at, and updated_at from BaseModelDB.
-
-UUID format is used for all primary keys (CHAR(36) in SQL).
-
-Foreign key constraints ensure referential integrity.
-
-The unique constraint on (user_id, place_id) in REVIEW prevents duplicate reviews by the same user for the same place.
+- All entities inherit `id`, `created_at`, and `updated_at` from `BaseModelDB`.
+- UUID format (`CHAR(36)`) is used for all primary keys.
+- Foreign key constraints ensure **referential integrity**.
+- The unique constraint on `(user_id, place_id)` in `REVIEW` prevents duplicate reviews by the same user for the same place.
+- This schema represents the **core structure of the HBnB application**.
 
 
 
