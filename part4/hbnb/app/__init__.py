@@ -1,6 +1,6 @@
 from flask import Flask
 import config
-from app.extensions import rest_api, bcrypt, jwt, db
+from app.extensions import rest_api, bcrypt, jwt, db, CORS
 
 
 
@@ -14,6 +14,7 @@ def create_app(config_class=config.DevelopmentConfig):
     bcrypt.init_app(app)
     jwt.init_app(app)
     db.init_app(app)
+    CORS(app)
 
     
     from app.api.v1.users import ns as users_ns
