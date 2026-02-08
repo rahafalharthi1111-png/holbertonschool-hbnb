@@ -1,0 +1,170 @@
+/*GLOBAL SYTLE*/
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body {
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+/* Header & Navigation */
+
+header {
+    background-color: #2c3e50;
+    padding: 1rem 2rem;
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    height: 50px;
+}
+
+.navigation a {
+    color: #fff;
+    text-decoration: none;
+    margin-left: 1rem;
+    font-weight: bold;
+}
+
+.login-button {
+    padding: 6px 12px;
+    background-color: #e67e22;
+    border-radius: 5px;
+}
+
+.login-button:hover {
+    background-color: #d35400;
+}
+
+/* Main Layout */
+
+main {
+    padding: 2rem;
+}
+
+/* Place Cards (Index Page)
+   FIXED PARAMETERS APPLIED*/
+
+.place-card {
+    background-color: #fff;
+    margin: 20px;
+    padding: 10px;    
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.place-card h3 {
+    margin-bottom: 10px;
+}
+
+.place-card p {
+    margin-bottom: 10px;
+}
+
+.details-button {
+    display: inline-block;
+    padding: 8px 12px;
+    background-color: #3498db;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.details-button:hover {
+    background-color: #2980b9;
+}
+
+/* Place Details Page*/
+
+.place-details {
+    background-color: #fff;
+    margin: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.place-info p {
+    margin-bottom: 8px;
+}
+
+/* Review Cards
+   FIXED PARAMETERS APPLIED */
+
+.review-card {
+    background-color: #fff;
+    margin: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.review-card p {
+    margin-bottom: 6px;
+}
+
+/* Forms (Login & Review)*/
+
+form {
+    background-color: #fff;
+    padding: 20px;
+    max-width: 400px;
+    margin: 40px auto;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+}
+
+form h2 {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+form input,
+form textarea,
+form select {
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+form button {
+    width: 100%;
+    padding: 10px;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+form button:hover {
+    background-color: #1e8449;
+}
+
+/* Footer */
+
+footer {
+    background-color: #2c3e50;
+    color: #fff;
+    text-align: center;
+    padding: 1rem;
+    margin-top: 40px;
+}
