@@ -50,11 +50,40 @@ async function loginUser(email, password) {
 function showError(message) {
     alert(`Login failed: ${message}`);
 }
+function checkAuthentication() {
+    const token = getCookie('token');
+    const loginLink = document.getElementById('login-link');
+
+    if (!token) {
+        if (loginLink) loginLink.style.display = 'block';
+    } else {
+        if (loginLink) loginLink.style.display = 'none';
+        fetchPlaces(token);
+    }
+}
+
+function getCookie(name) {
+    const cookies = document.cookie.split(';');
+
+    for (let cookie of cookies) {
+        const [key, value] = cookie.trim().split('=');
+        if (key === name) {
+            return value;
+        }
+    }
+    return null;
+}
+
+/* Display Places */
+
 let allPlaces = [];
 
-/* Fetch Places */
-function fetchPlaces() {
-    fetch(`${API_BASE_URL}/places`)
+function fetchPlaces(token) {
+    fetch(`${API_BASE_URL}/places`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
         .then(response => response.json())
         .then(data => {
             allPlaces = data;
@@ -63,7 +92,6 @@ function fetchPlaces() {
         .catch(error => console.error("Error fetching places:", error));
 }
 
-/* Display Places */
 function displayPlaces(places) {
     const placesList = document.getElementById("places-list");
     placesList.innerHTML = "";
@@ -71,6 +99,7 @@ function displayPlaces(places) {
     places.forEach(place => {
         const placeCard = document.createElement("div");
         placeCard.classList.add("place-card");
+        placeCard.setAttribute("data-price", place.price_by_night);
 
         placeCard.innerHTML = `
             <h2>${place.name}</h2>
@@ -83,21 +112,24 @@ function displayPlaces(places) {
 }
 
 /* Price Filter */
+
 function setupPriceFilter() {
     const filter = document.getElementById("price-filter");
 
     if (!filter) return;
 
     filter.addEventListener("change", function () {
-        const maxPrice = this.value;
+        const selectedPrice = this.value;
+        const placeCards = document.querySelectorAll(".place-card");
 
-        if (maxPrice === "all") {
-            displayPlaces(allPlaces);
-        } else {
-            const filteredPlaces = allPlaces.filter(place =>
-                place.price_by_night <= parseInt(maxPrice)
-            );
-            displayPlaces(filteredPlaces);
-        }
+        placeCards.forEach(card => {
+            const price = parseInt(card.getAttribute("data-price"));
+
+            if (selectedPrice === "all" || price <= parseInt(selectedPrice)) {
+                card.style.display = "block";
+            } else {
+                card.style.display = "none";
+            }
+        });
     });
 }
