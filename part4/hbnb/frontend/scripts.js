@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
             await loginUser(email, password);
         });
     }
+	if (document.getElementById("places-list")) {
+        fetchPlaces();
+        setupPriceFilter();
+    }
 });
 
 const API_BASE_URL = 'http://127.0.0.1:5000/api/v1';
@@ -45,4 +49,55 @@ async function loginUser(email, password) {
 
 function showError(message) {
     alert(`Login failed: ${message}`);
+}
+let allPlaces = [];
+
+/* Fetch Places */
+function fetchPlaces() {
+    fetch(`${API_BASE_URL}/places`)
+        .then(response => response.json())
+        .then(data => {
+            allPlaces = data;
+            displayPlaces(allPlaces);
+        })
+        .catch(error => console.error("Error fetching places:", error));
+}
+
+/* Display Places */
+function displayPlaces(places) {
+    const placesList = document.getElementById("places-list");
+    placesList.innerHTML = "";
+
+    places.forEach(place => {
+        const placeCard = document.createElement("div");
+        placeCard.classList.add("place-card");
+
+        placeCard.innerHTML = `
+            <h2>${place.name}</h2>
+            <p><strong>Price per night:</strong> $${place.price_by_night}</p>
+            <p>${place.description}</p>
+        `;
+
+        placesList.appendChild(placeCard);
+    });
+}
+
+/* Price Filter */
+function setupPriceFilter() {
+    const filter = document.getElementById("price-filter");
+
+    if (!filter) return;
+
+    filter.addEventListener("change", function () {
+        const maxPrice = this.value;
+
+        if (maxPrice === "all") {
+            displayPlaces(allPlaces);
+        } else {
+            const filteredPlaces = allPlaces.filter(place =>
+                place.price_by_night <= parseInt(maxPrice)
+            );
+            displayPlaces(filteredPlaces);
+        }
+    });
 }
