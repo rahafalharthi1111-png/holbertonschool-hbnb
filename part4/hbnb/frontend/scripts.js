@@ -134,6 +134,9 @@ function setupPriceFilter() {
         });
     });
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+
     const placeDetailsSection = document.querySelector(".place-info");
 
     if (placeDetailsSection) {
