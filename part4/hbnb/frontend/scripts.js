@@ -105,6 +105,7 @@ function displayPlaces(places) {
             <h2>${place.name}</h2>
             <p><strong>Price per night:</strong> $${place.price_by_night}</p>
             <p>${place.description}</p>
+	    <a href="place.html?id=${place.id}">View Details</a>
         `;
 
         placesList.appendChild(placeCard);
@@ -132,4 +133,119 @@ function setupPriceFilter() {
             }
         });
     });
+}
+    const placeDetailsSection = document.querySelector(".place-info");
+
+    if (placeDetailsSection) {
+
+        const placeId = getPlaceIdFromURL();
+        const token = getCookie('token');
+
+        checkPlaceAuthentication(token, placeId);
+    }
+
+});
+
+/* Get place ID from URL */
+function getPlaceIdFromURL() {
+
+    const params = new URLSearchParams(window.location.search);
+    return params.get("id");
+
+}
+
+/* Check authentication */
+function checkPlaceAuthentication(token, placeId) {
+
+    const addReviewSection = document.querySelector(".add-review");
+
+    if (!token) {
+
+        if (addReviewSection)
+            addReviewSection.style.display = "none";
+
+        fetchPlaceDetails(null, placeId);
+
+    } else {
+
+        if (addReviewSection)
+            addReviewSection.style.display = "block";
+
+        fetchPlaceDetails(token, placeId);
+    }
+
+}
+
+/* Fetch place details */
+async function fetchPlaceDetails(token, placeId) {
+
+    try {
+
+        const options = token ? {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        } : {};
+
+        const response = await fetch(`${API_BASE_URL}/places/${placeId}`, options);
+
+        if (!response.ok)
+            throw new Error("Failed to fetch place");
+
+        const place = await response.json();
+
+        displayPlaceDetails(place);
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+    }
+
+}
+
+/* Display place details */
+function displayPlaceDetails(place) {
+
+    const section = document.querySelector(".place-info");
+
+    section.innerHTML = `
+        <h1>${place.name}</h1>
+
+        <p>
+            <strong>Description:</strong>
+            ${place.description}
+        </p>
+
+        <p>
+            <strong>Price:</strong>
+            $${place.price_by_night}
+        </p>
+
+        <h3>Amenities</h3>
+
+        <ul>
+            ${
+                place.amenities && place.amenities.length
+                ?
+                place.amenities.map(a => `<li>${a.name || a}</li>`).join('')
+                :
+                "<li>No amenities</li>"
+            }
+        </ul>
+
+        <h3>Reviews</h3>
+
+        <ul>
+            ${
+                place.reviews && place.reviews.length
+                ?
+                place.reviews.map(r => `<li>${r.text}</li>`).join('')
+                :
+                "<li>No reviews</li>"
+            }
+        </ul>
+    `;
+
 }
