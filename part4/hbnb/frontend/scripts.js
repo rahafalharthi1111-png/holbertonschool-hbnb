@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 	if (document.getElementById("places-list")) {
-        fetchPlaces();
+        checkAuthentication();
         setupPriceFilter();
     }
 });
