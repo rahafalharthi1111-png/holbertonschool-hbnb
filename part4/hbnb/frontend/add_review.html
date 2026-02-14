@@ -3,51 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HBnB | Add Review</title>
+    <title>HBnB | List of Places</title>
+
+    <link rel="icon" type="image/png" href="./static/icon.png">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
+    <!-- Skip to main content (Keyboard users) -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
     <!-- Header -->
     <header>
         <div class="header-container">
-            <img src="images/logo.png" alt="HBnB Logo" class="logo">
 
-            <nav class="navigation">
-                <a href="index.html">Home</a>
-                <a href="login.html" class="login-button">Login</a>
+            <a href="index.html" aria-label="HBnB Home">
+                <img src="./static/logo.png" alt="HBnB Logo" class="logo">
+            </a>
+
+            <!-- Navigation -->
+            <nav class="navigation" aria-label="Primary navigation">
+                <ul>
+                    <li><a href="index.html" aria-current="page">Home</a></li>
+                    <li>
+                        <a href="login.html"
+                           class="login-button"
+                           id="login-link">
+                           Login
+                        </a>
+                    </li>
+                </ul>
             </nav>
+
         </div>
     </header>
 
     <!-- Main Content -->
-    <main>
-        <section class="review-section">
-            <form id="review-form">
-                <h2>Add a Review</h2>
+    <main id="main-content" tabindex="-1">
 
-                <input type="hidden" id="place-id" name="place_id">
+        <h1>Available Places</h1>
 
-                <label for="review">Your Review:</label>
-                <textarea
-                    id="review"
-                    name="review"
-                    required
-                ></textarea>
+        <!-- Filter Section -->
+        <section id="filter" aria-labelledby="filter-heading">
+            <h2 id="filter-heading">Filter Places</h2>
 
-                <label for="rating">Rating:</label>
-                <select id="rating" name="rating" required>
-                    <option value="">Select rating</option>
-                    <option value="1">1 ⭐</option>
-                    <option value="2">2 ⭐⭐</option>
-                    <option value="3">3 ⭐⭐⭐</option>
-                    <option value="4">4 ⭐⭐⭐⭐</option>
-                    <option value="5">5 ⭐⭐⭐⭐⭐</option>
+            <div class="filter-control">
+                <label for="price-filter">Maximum price per night</label>
+
+                <select id="price-filter"
+                        name="price-filter"
+                        aria-describedby="price-filter-help">
                 </select>
 
-                <button type="submit">Submit Review</button>
-            </form>
+                <p id="price-filter-help" class="visually-hidden">
+                    Select a maximum price to filter the list of available places.
+                </p>
+            </div>
         </section>
+
+        <!-- Places List -->
+        <section 
+            id="places-list"
+            aria-live="polite"
+            aria-label="List of available places">
+
+            <!-- JS will dynamically insert place cards here -->
+        </section>
+
     </main>
 
     <!-- Footer -->
