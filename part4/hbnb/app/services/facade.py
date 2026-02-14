@@ -69,12 +69,10 @@ class HBnBFacade:
 
     ## Places CRUD
     def create_place(self, place_data):
-
         owner_id = place_data.get("owner_id")
         owner = self.user_repo.get(owner_id)
         if not owner:
             return None
-
 
         amenities_objs = []
         for amenity_id in place_data.get("amenities", []):
@@ -90,7 +88,8 @@ class HBnBFacade:
                 price=place_data["price"],
                 latitude=place_data["latitude"],
                 longitude=place_data["longitude"],
-                user_id=owner.id
+                user_id=owner.id,
+                image=place_data.get("image")
             )
             place.amenities = amenities_objs
 
@@ -100,6 +99,7 @@ class HBnBFacade:
 
         self.place_repo.add(place)
         return place
+
 
 
     def get_place(self, place_id):
@@ -137,6 +137,7 @@ class HBnBFacade:
         self.place_repo.commit()
 
         return place, None
+
 
 
     ## Reviwes CRUD
@@ -191,7 +192,18 @@ class HBnBFacade:
         
         if review.user_id != current_user_id:
             return None, "Unauthorized action."
+        
+        if "place_id" in review_data:
+            new_place_id = review_data["place_id"]
 
+        place = self.place_repo.get(new_place_id)
+        if not place:
+            return None, "Place not found."
+
+        if place.user_id == current_user_id:
+            return None, "Cannot review your own place."
+
+        review.place_id = new_place_id
         if "text" in review_data:
             review.text = review_data["text"]
 
@@ -344,3 +356,8 @@ class HBnBFacade:
         self.place_repo.commit()
 
         return place, None
+
+
+
+
+
