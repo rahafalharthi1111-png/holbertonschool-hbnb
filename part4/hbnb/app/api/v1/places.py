@@ -50,6 +50,10 @@ place_model = ns.model("Place", {
         required=True,
         description="Longitude of the place (-180 to 180)"
     ),
+    "image": fields.String(
+        required=False,
+        description="URL of the place image"
+    ),
     "owner_id": fields.String(
         required=True,
         description="ID of the user who owns this place"
@@ -58,7 +62,7 @@ place_model = ns.model("Place", {
         fields.String,
         required=False,
         description="List of amenity IDs associated with this place",
-        attribute='user_id'
+
     )
 })
 
@@ -95,12 +99,15 @@ place_resp_model = ns.model("PlaceResponse", {
     "longitude": fields.Float,
 
     "owner_id": fields.String(attribute="user_id"),
-
+    "image": fields.String,
     "amenities": fields.List(
         fields.String,
-        attribute=lambda place: [amenity.id for amenity in place.amenities]
+        attribute=lambda place: [amenity.name for amenity in place.amenities]
     )
 })
+
+
+
 @ns.route("/")
 class PlaceList(Resource):
     @jwt_required()
@@ -110,9 +117,10 @@ class PlaceList(Resource):
     def post(self):
         current_user = get_jwt_identity()
         data = request.get_json()
+        data["owner_id"] = current_user
+
         place = facade.create_place(data)
-        if not place:
-            return {"error": "Invalid input data"}, 400
+
         return place.to_dict(), 201
 
     @ns.response(200, "List of places retrieved successfully")
