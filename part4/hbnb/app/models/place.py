@@ -24,6 +24,9 @@ class Place(BaseModel):
     #Foreign Key to User (owner)
     user_id = db.Column(db.String, db.ForeignKey("users.id"), nullable=False)
 
+    #Column for image URL
+    image = db.Column(db.String(255), nullable=True)
+
     #Relationships
     reviews = db.relationship("Review", backref="place", lazy=True)
     amenities = db.relationship("Amenity", secondary=place_amenity, backref=db.backref("places", lazy=True))
@@ -62,7 +65,8 @@ class Place(BaseModel):
             "longitude": self.longitude,
             "owner_id": self.owner.id if self.owner else None,
             "reviews": [review.to_dict() for review in self.reviews],
-            "amenities": [amenity.id for amenity in self.amenities]
+            "amenities": [amenity.id for amenity in self.amenities],
+            "image": self.image
         }
         if detailed:
             data["owner"] = self.owner.to_dict() if self.owner else None
