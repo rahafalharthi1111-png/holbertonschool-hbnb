@@ -4,45 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HBnB | Login</title>
+    <link rel="icon" type="image/png" href="./static/icon.png">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
+    <!-- Skip Link for Keyboard Users -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
     <!-- Header -->
     <header>
         <div class="header-container">
-            <img src="images/logo.png" alt="HBnB Logo" class="logo">
+            <a href="index.html" aria-label="HBnB Home">
+                <img src="./static/logo.png" alt="" class="logo">
+            </a>
 
-            <nav class="navigation">
+            <nav class="navigation" aria-label="Main navigation">
                 <a href="index.html">Home</a>
-                <a href="login.html" class="login-button">Login</a>
+                <a href="login.html" aria-current="page" class="login-button">Login</a>
             </nav>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main>
-        <section class="login-section">
-            <form id="login-form" class="form">
-                <h2>Login</h2>
+    <main id="main-content" tabindex="-1">
+        <section class="login-section" aria-labelledby="login-heading">
+            
+            <h1 id="login-heading">Login</h1>
 
-                <label for="email">Email:</label>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    required
-                >
+            <form id="login-form" class="form" novalidate>
 
-                <label for="password">Password:</label>
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    required
-                >
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email">Email address</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        required
+                        autocomplete="email"
+                        aria-describedby="email-hint"
+                    >
+                    <small id="email-hint" class="visually-hidden">
+                        Enter the email associated with your account.
+                    </small>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        required
+                        autocomplete="current-password"
+                        aria-describedby="password-hint"
+                    >
+                    <small id="password-hint" class="visually-hidden">
+                        Password must be at least 8 characters.
+                    </small>
+                </div>
+
+                <!-- Error Message Container -->
+                <div id="form-error"
+                     role="alert"
+                     aria-live="assertive"
+                     class="error-message"
+                     hidden>
+                </div>
 
                 <button type="submit">Login</button>
+
             </form>
         </section>
     </main>
