@@ -123,7 +123,7 @@ function displayPlaces(places) {
             <h3>${place.title}</h3>
             <p>${place.description || ''}</p>
             <p><strong>Price:</strong> $${place.price} / night</p>
-            <img src="/hbnb/frontend/static/${place.image || 'place_default_001.jpg'}" alt="${place.title}" class="place-image">
+            <img src="/part4/hbnb/frontend/static/${place.image || 'place_default_001.jpg'}" alt="${place.title}" class="place-image">
             <a href="place.html?id=${place.id}" class="details-button">
                 View Details
             </a>
